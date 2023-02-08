@@ -1,20 +1,24 @@
+-- WHERE : filtra le righe prima dell'agglomerazione dei dati per filtrare le righe sulla base di proprietà individuali.
+-- HAVING : filtra le righe che hanno determinate proprietà aggregate, come la somma, il conteggio, la media, o comunque dati agglomerati.
+	-- ma non è in grado di filtrare i singoli record come fa la clausola WHERE.
+
 -- 1- Selezionare tutte le software house americane (3)
-select * from software_houses sh where country like "United States";
+select * from software_houses where country like "United States";
 
 -- 2- Selezionare tutti i giocatori della città di 'Rogahnland' (2)
-select * from players  where city like "Rogahnland";
+select * from players where city like "Rogahnland";
 
 -- 3- Selezionare tutti i giocatori il cui nome finisce per "a" (220)
-select * from players p  where name  like '%a';
+select * from players where name  like "%";
 
 -- 4- Selezionare tutte le recensioni scritte dal giocatore con ID = 800 (11)
-select * from reviews r  where player_id = 800;
+select * from reviews where player_id = 800;
 
 -- 5- Contare quanti tornei ci sono stati nell'anno 2015 (9)
-select count() (*) from tournaments t where `year` = 2015;
+select count(*) from tournaments where `year` = 2015;
 
 -- 6- Selezionare tutti i premi che contengono nella descrizione la parola 'facere' (2)
-select * from  awards a where description like'%facere%';
+select * from awards where description like '%facere%';
 
 -- 7- Selezionare tutti i videogame che hanno la categoria 2 (FPS) o 6 (RPG), mostrandoli una sola volta (del videogioco vogliamo solo l'ID) (287)
 select distinct videogame_id from category_videogame v where category_id = 2 or category_id = 6
@@ -78,7 +82,13 @@ from players p
 inner join reviews r
 on p.id = r.player_id;
 
+select distinct p.*
+from reviews r
+inner join players p 
+on p.id = r.player_id;
+
 -- 2- Sezionare tutti i videogame dei tornei tenuti nel 2016, mostrandoli una sola volta (226)
+
 select distinct v.*
 from tournaments t 
 inner join tournament_videogame tv
@@ -87,7 +97,17 @@ inner join videogames v
 on v.id = tv.videogame_id
 where t.year = 2016;
 
+select distinct v.name 
+from videogames v 
+inner join tournament_videogame tv 
+on tv.videogame_id = v.id 
+inner join tournaments t 
+on tv.tournament_id = t.id
+where t.year = 2016
+
+
 -- 3- Mostrare le categorie di ogni videogioco (1718)
+
 select v.id, v.name, c.name
 from videogames v
 inner join category_videogame cv
@@ -95,15 +115,32 @@ on v.id = cv.videogame_id
 inner join categories c
 on cv.category_id = c.id;
 
+-- 3.1- Mostrare per ogni gioco tutte le categorie (500)
+
+select v.id, v.name, group_concat(c.name separator ', ') as categories
+from videogames v
+inner join category_videogame cv
+on v.id = cv.videogame_id
+inner join categories c
+on cv.category_id = c.id
+group by v.id;
+
 -- 4- Selezionare i dati di tutte le software house che hanno rilasciato almeno un gioco dopo il 2020, mostrandoli una sola volta (6)
 select distinct sh.*
 from software_houses sh 
 inner join videogames v
 on sh.id = v.software_house_id
-where v.release_date >= '2020-01-01'
+where v.release_date >= '2020-01-01';
+
+select sh.*
+from videogames v
+inner join software_houses sh 
+on sh.id = v.software_house_id
+where year(v.release_date) >= 2020
 group by sh.id;
 
 -- 5- Selezionare i premi ricevuti da ogni software house per i videogiochi che ha prodotto (55)
+
 select sh.id, sh.name, a.name as "Award"
 from software_houses sh
 inner join videogames v
@@ -113,7 +150,19 @@ on v.id = av.videogame_id
 inner join awards a 
 on av.award_id = a.id;
 
+-- 5.1- Selezionare i videogames che hanno avuto dei premi ed elencarli (52) -- infatti solo 3 videogiochi hanno 2 premi (55-3)
+
+select v.id, v.name, group_concat(a.name) as "Awards"
+from awards a 
+inner join award_videogame av
+on av.award_id = a.id
+inner join videogames v
+on v.id = av.videogame_id
+group by v.id;
+
+
 -- 6- Selezionare categorie e classificazioni PEGI dei videogiochi che hanno ricevuto recensioni da 4 e 5 stelle, mostrandole una sola volta (3363)
+
 select distinct v.name, c.name, p.name
 from categories c
 join category_videogame cv
