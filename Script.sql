@@ -63,6 +63,13 @@ group by pegi_label_id;
 -- 4- Mostrare il numero di videogiochi rilasciati ogni anno (11)
 select year(release_date) as "Year", count(id) as "Count" from videogames v group by year(release_date);
 
+select cast(year(release_date) as char(4)) as "year", count(id) as "count"
+from videogames v
+group by year;   -- CORRETTO
+-- group by `year`; CORRETTO
+-- group by "year"; ERRORE
+-- group by 'year'; ERRORE
+
 -- 5- Contare quanti videogiochi sono disponbiili per ciascun device (del device vogliamo solo l'ID) (7)
 select count(videogame_id), device_id  from device_videogame dv group by device_id
 
